@@ -27,7 +27,7 @@ Designing a web application to handle large file uploads (from gigabytes to tera
 | **🚀 Be Performant** | Avoid freezing the user's browser by calculating a full-file checksum. The upload must start instantly. | Traditional integrity checks require reading the entire file on the client-side, which is unacceptably slow for large files. |
 | **💪 Be Resumable** | Allow users to seamlessly resume an upload after a network drop or browser crash, without starting over. | A stateless, direct-to-storage architecture has no inherent memory of an upload's progress, making resumability difficult to orchestrate. |
 | **☁️ Be Direct-to-Storage** | Offload the high-bandwidth data transfer from your application servers directly to the object store to keep your infrastructure scalable and cost-effective. | Most simple enforcement methods (like a proxy) violate this rule by putting your server back in the middle of the data path, creating a bottleneck. |
-| **🌐 Be Provider-Compatible**| Work reliably across popular S3-compatible providers like Cloudflare R2 and Backblaze B2, not just AWS S3. | Providers have subtle but critical differences in their S3 API implementations that can break certain security patterns. |
+| **🌐 Be Provider-Compatible**| Work reliably across popular S3-compatible providers like Cloudflare R2 and Backblaze B2, not just AWS S3. | Providers have differences in their S3 API implementations that can break certain security patterns. |
 
 This repository presents a solution that elegantly solves all of these problems: the **"Manifested Multipart Upload"** pattern.
 
