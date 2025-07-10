@@ -83,7 +83,7 @@ Here are high-level algorithms outlining the logic on both the server and client
 
 ### Server-Side Logic
 
-```
+```ts
 // Endpoint: POST /uploads/initiate
 function initiateUpload(request):
   // 1. Authenticate and authorize user
@@ -166,7 +166,7 @@ function completeUpload(request):
 
 ### Client-Side Logic (JavaScript)
 
-```javascript
+```ts
 // Function triggered when user selects a file
 async function handleFileSelect(file):
   // 1. Initiate the upload with our backend
