@@ -1,19 +1,33 @@
-﻿# A Guide to Secure, Resumable, Quota-Enforced Large File Uploads from the Browser to S3-Compatible Storage
+![S3 Presigned Multipart Upload Tester](https://github.com/user-attachments/assets/dc9ca3a5-d99a-47d3-aea1-43de6384ef98)
 
- ![S3 Presigned Multipart Upload Tester](https://github.com/user-attachments/assets/dc9ca3a5-d99a-47d3-aea1-43de6384ef98)
+# A Guide to Secure, Resumable, Quota-Enforced Large File Uploads from the Browser to S3-Compatible Storage
 
+## **Table of Contents**
+
+1. [The Problem: The S3 Multipart Upload "Enforcement Gap"](#the-problem-the-s3-multipart-upload-enforcement-gap)
+2. [The Solution: Manifested Multipart Upload with Cryptographically-Enforced Chunks](#the-solution-manifested-multipart-upload-with-cryptographically-enforced-chunks)
+   - [Provider Compatibility Matrix (July 2025)](#provider-compatibility-matrix-july-2025)
+   - [How It Works: A Step-by-Step Guide](#how-it-works-a-step-by-step-guide)
+   - [Key Benefits of This Approach](#key-benefits-of-this-approach)
+3. [Implementation Pseudo-Algorithms](#implementation-pseudo-algorithms)
+   - [Server-Side Logic](#server-side-logic)
+   - [Client-Side Logic (JavaScript)](#client-side-logic-javascript)
+4. [Verifying Your Provider: The Enforcement Tester Script](#verifying-your-provider-the-enforcement-tester-script)
+   - [Features](#features)
+   - [How to Use](#how-to-use)
+5. [A Comparative Analysis of Architectural Patterns](#a-comparative-analysis-of-architectural-patterns)
 
 ## The Problem: The S3 Multipart Upload "Enforcement Gap"
 
 Designing a web application to handle large file uploads (from gigabytes to terabytes) presents a series of steep architectural challenges. How do you build a system that can simultaneously:
 
-a. **Offload Bandwidth:** Avoid proxying all data through your own application servers to keep them scalable and cost-effective.
-b. **Enforce Strict Quotas:** Reliably prevent a user from uploading 10 TB of data when their plan only allows for 1 GB.
-c. **Support Large Files:** Gracefully handle multi-gigabyte files directly from a web browser without crashing it.
-d. **Be Resumable:** Allow users to seamlessly resume an upload after a network drop or browser crash, without starting over from scratch.
-e. **Be Direct-to-Storage:** Use a "serverless" client-to-storage pattern, with no stateful proxy or gateway.
-f. **Be Client-Performant:** Avoid freezing the user's browser for minutes or hours by calculating a full-file checksum before uploading.
-g. **Be Provider-Compatible:** Work reliably across popular S3-compatible providers like Cloudflare R2 and Backblaze B2.
+| Requirement | Description | Why It's Hard |
+| :--- | :--- | :--- |
+| **🔒 Enforce Strict Quotas** | Reliably prevent a user from uploading 10 TB of data when their plan only allows for 1 GB. | The standard S3 Multipart Upload protocol is "blind" to the total file size until *after* all data has been stored, creating a massive enforcement gap. |
+| **🚀 Be Performant** | Avoid freezing the user's browser by calculating a full-file checksum. The upload must start instantly. | Traditional integrity checks require reading the entire file on the client-side, which is unacceptably slow for large files. |
+| **💪 Be Resumable** | Allow users to seamlessly resume an upload after a network drop or browser crash, without starting over. | A stateless, direct-to-storage architecture has no inherent memory of an upload's progress, making resumability difficult to orchestrate. |
+| **☁️ Be Direct-to-Storage** | Offload the high-bandwidth data transfer from your application servers directly to the object store to keep your infrastructure scalable and cost-effective. | Most simple enforcement methods (like a proxy) violate this rule by putting your server back in the middle of the data path, creating a bottleneck. |
+| **🌐 Be Provider-Compatible**| Work reliably across popular S3-compatible providers like Cloudflare R2 and Backblaze B2, not just AWS S3. | Providers have differences in their S3 API implementations that can break certain security patterns. |
 
 This repository presents a solution that elegantly solves all of these problems: the **"Manifested Multipart Upload"** pattern.
 
@@ -22,6 +36,19 @@ This repository presents a solution that elegantly solves all of these problems:
 The solution is to create a cryptographically-enforced contract that the storage provider validates on our behalf for every single piece of data uploaded.
 
 This pattern leverages the native S3 Multipart Upload (MPU) protocol but adds a crucial layer of server-side orchestration and cryptographic control.
+
+### Provider Compatibility Matrix (July 2025)
+
+The viability of this pattern depends entirely on the S3-compatible provider's correct implementation of the AWS Signature Version 4 (SigV4) specification, particularly its enforcement of signed headers in presigned URLs.
+
+| Provider | `Content-Length` Enforcement in Presigned `UploadPart` | Status | Notes |
+| :--- | :--- | :--- | :--- |
+| **AWS S3** | ✅ Yes | **Supported** | The reference implementation. Works as expected. |
+| **Cloudflare R2** | ✅ Yes | **Supported** | R2's S3 compatibility layer correctly validates signed headers. |
+| **Backblaze B2** | ✅ Yes | **Supported** | B2's S3-compatible API correctly validates signed headers. |
+| **Google Cloud Storage** | ✅ Yes | **Supported** | GCS in "Interoperability Mode" supports and enforces this. |
+
+As of July 2025, all major S3-compatible providers have a mature enough SigV4 implementation to correctly enforce the cryptographically-signed `Content-Length`, making this pattern a reliable choice for multi-cloud and provider-agnostic applications.
 
 ### How It Works: A Step-by-Step Guide
 
@@ -48,26 +75,13 @@ This pattern makes it cryptographically impossible for a user to upload more dat
 *   **Performance:** Chunks can be uploaded in parallel, saturating the user's connection and maximizing throughput.
 *   **Direct-to-Storage:** No proxy server is needed; the architecture remains scalable and cost-effective.
 
-## Provider Compatibility Matrix (July 2025)
-
-The viability of this pattern depends entirely on the S3-compatible provider's correct implementation of the AWS Signature Version 4 (SigV4) specification, particularly its enforcement of signed headers in presigned URLs.
-
-| Provider | `Content-Length` Enforcement in Presigned `UploadPart` | Status | Notes |
-| :--- | :--- | :--- | :--- |
-| **AWS S3** | ✅ Yes | **Supported** | The reference implementation. Works as expected. |
-| **Cloudflare R2** | ✅ Yes | **Supported** | R2's S3 compatibility layer correctly validates signed headers. |
-| **Backblaze B2** | ✅ Yes | **Supported** | B2's S3-compatible API correctly validates signed headers. |
-| **Google Cloud Storage** | ✅ Yes | **Supported** | GCS in "Interoperability Mode" supports and enforces this. |
-
-**Conclusion:** The **Manifested Multipart Upload** pattern is a robust and widely-supported architecture. As of July 2025, all major S3-compatible providers have a mature enough SigV4 implementation to correctly enforce the cryptographically-signed `Content-Length`, making this pattern a reliable choice for multi-cloud and provider-agnostic applications.
-
 ## Implementation Pseudo-Algorithms
 
 Here are high-level algorithms outlining the logic on both the server and client side.
 
 ### Server-Side Logic
 
-```
+```ts
 // Endpoint: POST /uploads/initiate
 function initiateUpload(request):
   // 1. Authenticate and authorize user
@@ -150,7 +164,7 @@ function completeUpload(request):
 
 ### Client-Side Logic (JavaScript)
 
-```javascript
+```ts
 // Function triggered when user selects a file
 async function handleFileSelect(file):
   // 1. Initiate the upload with our backend
