@@ -34,7 +34,7 @@ The viability of this pattern depends entirely on the S3-compatible provider's c
 | **Backblaze B2** | ✅ Yes | **Supported** | B2's S3-compatible API correctly validates signed headers. |
 | **Google Cloud Storage** | ✅ Yes | **Supported** | GCS in "Interoperability Mode" supports and enforces this. |
 
-**Conclusion:** The **Manifested Multipart Upload** pattern is a robust and widely-supported architecture. As of July 2025, all major S3-compatible providers have a mature enough SigV4 implementation to correctly enforce the cryptographically-signed `Content-Length`, making this pattern a reliable choice for multi-cloud and provider-agnostic applications.
+As of July 2025, all major S3-compatible providers have a mature enough SigV4 implementation to correctly enforce the cryptographically-signed `Content-Length`, making this pattern a reliable choice for multi-cloud and provider-agnostic applications.
 
 ### How It Works: A Step-by-Step Guide
 
