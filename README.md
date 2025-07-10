@@ -17,19 +17,17 @@
    - [How to Use](#how-to-use)
 5. [A Comparative Analysis of Architectural Patterns](#a-comparative-analysis-of-architectural-patterns)
 
-
-
 ## The Problem: The S3 Multipart Upload "Enforcement Gap"
 
 Designing a web application to handle large file uploads (from gigabytes to terabytes) presents a series of steep architectural challenges. How do you build a system that can simultaneously:
 
-1. **Offload Bandwidth:** Avoid proxying all data through your own application servers to keep them scalable and cost-effective.
-2. **Enforce Strict Quotas:** Reliably prevent a user from uploading 10 TB of data when their plan only allows for 1 GB.
-3. **Support Large Files:** Gracefully handle multi-gigabyte files directly from a web browser without crashing it.
-4. **Be Resumable:** Allow users to seamlessly resume an upload after a network drop or browser crash, without starting over from scratch.
-5. **Be Direct-to-Storage:** Use a "serverless" client-to-storage pattern, with no stateful proxy or gateway.
-6. **Be Client-Performant:** Avoid freezing the user's browser for minutes or hours by calculating a full-file checksum before uploading.
-7. **Be Provider-Compatible:** Work reliably across popular S3-compatible providers like Cloudflare R2 and Backblaze B2.
+| Requirement | Description | Why It's Hard |
+| :--- | :--- | :--- |
+| **🔒 Enforce Strict Quotas** | Reliably prevent a user from uploading 10 TB of data when their plan only allows for 1 GB. | The standard S3 Multipart Upload protocol is "blind" to the total file size until *after* all data has been stored, creating a massive enforcement gap. |
+| **🚀 Be Performant** | Avoid freezing the user's browser by calculating a full-file checksum. The upload must start instantly. | Traditional integrity checks require reading the entire file on the client-side, which is unacceptably slow for large files. |
+| **💪 Be Resumable** | Allow users to seamlessly resume an upload after a network drop or browser crash, without starting over. | A stateless, direct-to-storage architecture has no inherent memory of an upload's progress, making resumability difficult to orchestrate. |
+| **☁️ Be Direct-to-Storage** | Offload the high-bandwidth data transfer from your application servers directly to the object store to keep your infrastructure scalable and cost-effective. | Most simple enforcement methods (like a proxy) violate this rule by putting your server back in the middle of the data path, creating a bottleneck. |
+| **🌐 Be Provider-Compatible**| Work reliably across popular S3-compatible providers like Cloudflare R2 and Backblaze B2, not just AWS S3. | Providers have subtle but critical differences in their S3 API implementations that can break certain security patterns. |
 
 This repository presents a solution that elegantly solves all of these problems: the **"Manifested Multipart Upload"** pattern.
 
