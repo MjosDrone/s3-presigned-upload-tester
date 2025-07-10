@@ -7,13 +7,13 @@
 
 Designing a web application to handle large file uploads (from gigabytes to terabytes) presents a series of steep architectural challenges. How do you build a system that can simultaneously:
 
-a. **Offload Bandwidth:** Avoid proxying all data through your own application servers to keep them scalable and cost-effective.
-b. **Enforce Strict Quotas:** Reliably prevent a user from uploading 10 TB of data when their plan only allows for 1 GB.
-c. **Support Large Files:** Gracefully handle multi-gigabyte files directly from a web browser without crashing it.
-d. **Be Resumable:** Allow users to seamlessly resume an upload after a network drop or browser crash, without starting over from scratch.
-e. **Be Direct-to-Storage:** Use a "serverless" client-to-storage pattern, with no stateful proxy or gateway.
-f. **Be Client-Performant:** Avoid freezing the user's browser for minutes or hours by calculating a full-file checksum before uploading.
-g. **Be Provider-Compatible:** Work reliably across popular S3-compatible providers like Cloudflare R2 and Backblaze B2.
+1. **Offload Bandwidth:** Avoid proxying all data through your own application servers to keep them scalable and cost-effective.
+2. **Enforce Strict Quotas:** Reliably prevent a user from uploading 10 TB of data when their plan only allows for 1 GB.
+3. **Support Large Files:** Gracefully handle multi-gigabyte files directly from a web browser without crashing it.
+4. **Be Resumable:** Allow users to seamlessly resume an upload after a network drop or browser crash, without starting over from scratch.
+5. **Be Direct-to-Storage:** Use a "serverless" client-to-storage pattern, with no stateful proxy or gateway.
+6. **Be Client-Performant:** Avoid freezing the user's browser for minutes or hours by calculating a full-file checksum before uploading.
+7. **Be Provider-Compatible:** Work reliably across popular S3-compatible providers like Cloudflare R2 and Backblaze B2.
 
 This repository presents a solution that elegantly solves all of these problems: the **"Manifested Multipart Upload"** pattern.
 
@@ -22,6 +22,19 @@ This repository presents a solution that elegantly solves all of these problems:
 The solution is to create a cryptographically-enforced contract that the storage provider validates on our behalf for every single piece of data uploaded.
 
 This pattern leverages the native S3 Multipart Upload (MPU) protocol but adds a crucial layer of server-side orchestration and cryptographic control.
+
+### Provider Compatibility Matrix (July 2025)
+
+The viability of this pattern depends entirely on the S3-compatible provider's correct implementation of the AWS Signature Version 4 (SigV4) specification, particularly its enforcement of signed headers in presigned URLs.
+
+| Provider | `Content-Length` Enforcement in Presigned `UploadPart` | Status | Notes |
+| :--- | :--- | :--- | :--- |
+| **AWS S3** | ✅ Yes | **Supported** | The reference implementation. Works as expected. |
+| **Cloudflare R2** | ✅ Yes | **Supported** | R2's S3 compatibility layer correctly validates signed headers. |
+| **Backblaze B2** | ✅ Yes | **Supported** | B2's S3-compatible API correctly validates signed headers. |
+| **Google Cloud Storage** | ✅ Yes | **Supported** | GCS in "Interoperability Mode" supports and enforces this. |
+
+**Conclusion:** The **Manifested Multipart Upload** pattern is a robust and widely-supported architecture. As of July 2025, all major S3-compatible providers have a mature enough SigV4 implementation to correctly enforce the cryptographically-signed `Content-Length`, making this pattern a reliable choice for multi-cloud and provider-agnostic applications.
 
 ### How It Works: A Step-by-Step Guide
 
@@ -47,19 +60,6 @@ This pattern makes it cryptographically impossible for a user to upload more dat
 *   **Resilience & Resumability:** The multipart nature means interrupted uploads can be resumed from the exact point of failure.
 *   **Performance:** Chunks can be uploaded in parallel, saturating the user's connection and maximizing throughput.
 *   **Direct-to-Storage:** No proxy server is needed; the architecture remains scalable and cost-effective.
-
-## Provider Compatibility Matrix (July 2025)
-
-The viability of this pattern depends entirely on the S3-compatible provider's correct implementation of the AWS Signature Version 4 (SigV4) specification, particularly its enforcement of signed headers in presigned URLs.
-
-| Provider | `Content-Length` Enforcement in Presigned `UploadPart` | Status | Notes |
-| :--- | :--- | :--- | :--- |
-| **AWS S3** | ✅ Yes | **Supported** | The reference implementation. Works as expected. |
-| **Cloudflare R2** | ✅ Yes | **Supported** | R2's S3 compatibility layer correctly validates signed headers. |
-| **Backblaze B2** | ✅ Yes | **Supported** | B2's S3-compatible API correctly validates signed headers. |
-| **Google Cloud Storage** | ✅ Yes | **Supported** | GCS in "Interoperability Mode" supports and enforces this. |
-
-**Conclusion:** The **Manifested Multipart Upload** pattern is a robust and widely-supported architecture. As of July 2025, all major S3-compatible providers have a mature enough SigV4 implementation to correctly enforce the cryptographically-signed `Content-Length`, making this pattern a reliable choice for multi-cloud and provider-agnostic applications.
 
 ## Implementation Pseudo-Algorithms
 
