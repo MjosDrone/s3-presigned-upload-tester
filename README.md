@@ -1,4 +1,4 @@
-![S3 Presigned Multipart Upload Tester](https://github.com/user-attachments/assets/dc9ca3a5-d99a-47d3-aea1-43de6384ef98)
+![S3 Presigned Multipart Upload Tester](https://github.com/user-attachments/assets/568aaea2-b163-4e39-89d8-bf2e7d287d29)
 
 # A Guide to Secure, Resumable, Quota-Enforced Large File Uploads from the Browser to S3-Compatible Storage
 
