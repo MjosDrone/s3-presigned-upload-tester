@@ -1,6 +1,7 @@
 ﻿# A Guide to Secure, Resumable, Quota-Enforced Large File Uploads from the Browser to S3-Compatible Storage
 
- ![S3 Presigned Multipart Upload Tester](https://github.com/user-attachments/assets/a24e6d36-c70c-475b-9aef-0b829e27607c)
+ ![S3 Presigned Multipart Upload Tester](https://github.com/user-attachments/assets/dc9ca3a5-d99a-47d3-aea1-43de6384ef98)
+
 
 ## The Problem: The S3 Multipart Upload "Enforcement Gap"
 
