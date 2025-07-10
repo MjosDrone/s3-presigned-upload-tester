@@ -225,7 +225,7 @@ This repository includes a Python script, `s3_multipart_enforcement_tester.py`, 
 
 1.  **Install Dependencies:**
     ```bash
-    pip install boto3 httpx tqdm
+    pip install boto3 httpx tqdm rich
     ```
 
 2.  **Configure Your Providers:**
