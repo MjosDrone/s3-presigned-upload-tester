@@ -2,6 +2,22 @@
 
  ![S3 Presigned Multipart Upload Tester](https://github.com/user-attachments/assets/dc9ca3a5-d99a-47d3-aea1-43de6384ef98)
 
+## **Table of Contents**
+
+1. [The Problem: The S3 Multipart Upload "Enforcement Gap"](#the-problem-the-s3-multipart-upload-enforcement-gap)
+2. [The Solution: Manifested Multipart Upload with Cryptographically-Enforced Chunks](#the-solution-manifested-multipart-upload-with-cryptographically-enforced-chunks)
+   - [Provider Compatibility Matrix (July 2025)](#provider-compatibility-matrix-july-2025)
+   - [How It Works: A Step-by-Step Guide](#how-it-works-a-step-by-step-guide)
+   - [Key Benefits of This Approach](#key-benefits-of-this-approach)
+3. [Implementation Pseudo-Algorithms](#implementation-pseudo-algorithms)
+   - [Server-Side Logic](#server-side-logic)
+   - [Client-Side Logic (JavaScript)](#client-side-logic-javascript)
+4. [Verifying Your Provider: The Enforcement Tester Script](#verifying-your-provider-the-enforcement-tester-script)
+   - [Features](#features)
+   - [How to Use](#how-to-use)
+5. [A Comparative Analysis of Architectural Patterns](#a-comparative-analysis-of-architectural-patterns)
+
+
 
 ## The Problem: The S3 Multipart Upload "Enforcement Gap"
 
